@@ -2,12 +2,9 @@ require("dotenv").config();
 import express, { Application } from "express";
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "./data-source";
-import { Routes } from "./constants/routes";
-import { User } from "./entities/user.entity";
 import config from "config";
 import validateEnv from "./utils/validateEnv";
-import redisClient from "./utils/connectRedis";
-import { initOpenApi, openApiInstance } from "./openapi";
+import { initOpenApi } from "./openapi";
 import { OpenApi, textPlain } from "ts-openapi";
 import router from "./routes";
 import AppError from "./utils/appError";
@@ -49,7 +46,7 @@ async function run(): Promise<void> {
 	const app = express(); // Construct express app
 	app.use(pinoHttp({ logger: logger }));
 
-	app.use("/", router); // Setup routes
+	app.use("/api", router); // Setup routes
 	initOpenApi(app); // Setup documentation
 
 	// Route does not exist
