@@ -28,11 +28,6 @@ export class User extends Model {
 	})
 	role: RoleEnumType.USER;
 
-	@Column({
-		default: false,
-	})
-	verified: boolean;
-
 	toJSON() {
 		return { ...this, password: undefined, verified: undefined };
 	}
