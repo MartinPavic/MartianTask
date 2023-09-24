@@ -4,14 +4,14 @@ import { CreateUserInput, LoginUserInput } from "../schemas/user.schema";
 import { AppDataSource } from "../data-source";
 import { User } from "../entities/user.entity";
 import HttpStatus from "http-status-codes";
-import { signJwt, signTokens, verifyJwt } from "../utils/jwt";
+import JWTService from "../services/jwt.service";
 import AppError from "../utils/appError";
-import redisClient from "../utils/connectRedis";
+import redisClient from "../utils/redis";
 
 const cookiesOptions: CookieOptions = {
 	httpOnly: true,
 	sameSite: "lax",
-	secure: process.env.NODE_ENV === "production",
+	secure: config.get<string>("env") === "production",
 };
 
 const accessTokenCookieOptions: CookieOptions = {
@@ -69,7 +69,7 @@ class AuthController {
 			}
 
 			// 2. Sign Access and Refresh Tokens
-			const { accessToken, refreshToken } = await signTokens(user);
+			const { accessToken, refreshToken } = await JWTService.signTokens(user);
 
 			// 3. Add Cookies
 			response.cookie("accessToken", accessToken, accessTokenCookieOptions);
@@ -100,7 +100,7 @@ class AuthController {
 			}
 
 			// 1. Validate refresh token
-			const decoded = verifyJwt<{ sub: string }>(refreshToken, "refreshTokenPublicKey");
+			const decoded = JWTService.verifyJwt<{ sub: string }>(refreshToken, "refreshTokenPublicKey");
 
 			if (!decoded) {
 				return next(new AppError(HttpStatus.FORBIDDEN, message));
@@ -121,7 +121,7 @@ class AuthController {
 			}
 
 			// 4. Sign new access token
-			const accessToken = signJwt({ sub: user.id }, "accessTokenPrivateKey", {
+			const accessToken = JWTService.signJwt({ sub: user.id }, "accessTokenPrivateKey", {
 				expiresIn: `${config.get<number>("accessTokenExpiresIn")}m`,
 			});
 

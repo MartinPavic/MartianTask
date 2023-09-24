@@ -1,53 +1,44 @@
-import { NextFunction, Request, Response } from 'express';
-import AppError from '../utils/appError';
-import redisClient from '../utils/connectRedis';
-import { verifyJwt } from '../utils/jwt';
-import { AppDataSource } from '../data-source';
-import { User } from '../entities/user.entity';
+import { NextFunction, Request, Response } from "express";
+import AppError from "../utils/appError";
+import redisClient from "../utils/redis";
+import JWTService from "../services/jwt.service";
+import { AppDataSource } from "../data-source";
+import { User } from "../entities/user.entity";
+import HttpStatus from "http-status-codes";
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+	try {
+		const accessToken = req.cookies.accessToken;
 
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+		if (!accessToken) {
+			return next(new AppError(HttpStatus.UNAUTHORIZED, "You are not logged in"));
+		}
 
-	const accessToken = req.cookies.accessToken;
+		// Validate the access token
+		const decoded = JWTService.verifyJwt<{ sub: string }>(accessToken, "accessTokenPublicKey");
 
-    if (!accessToken) {
-      return next(new AppError(401, 'You are not logged in'));
-    }
+		if (!decoded) {
+			return next(new AppError(HttpStatus.UNAUTHORIZED, `Invalid token or user doesn't exist`));
+		}
 
-    // Validate the access token
-    const decoded = verifyJwt<{ sub: string }>(
-      accessToken,
-      'accessTokenPublicKey'
-    );
+		// Check if the user has a valid session
+		const session = await redisClient.get(decoded.sub);
 
-    if (!decoded) {
-      return next(new AppError(401, `Invalid token or user doesn't exist`));
-    }
+		if (!session) {
+			return next(new AppError(HttpStatus.UNAUTHORIZED, `Invalid token or session has expired`));
+		}
 
-    // Check if the user has a valid session
-    const session = await redisClient.get(decoded.sub);
+		// Check if the user still exist
+		const user = await AppDataSource.getRepository(User).findOneBy({ id: JSON.parse(session).id });
 
-    if (!session) {
-      return next(new AppError(401, `Invalid token or session has expired`));
-    }
+		if (!user) {
+			return next(new AppError(HttpStatus.UNAUTHORIZED, `Invalid token or user does not exist`));
+		}
 
-    // Check if the user still exist
-    const user = await AppDataSource.getRepository(User).findOneBy({ id: JSON.parse(session).id });
+		// Add user to res.locals
+		res.locals.user = user;
 
-    if (!user) {
-      return next(new AppError(401, `Invalid token or user does not exist`));
-    }
-
-    // Add user to res.locals
-    res.locals.user = user;
-
-    next();
-  } catch (err: any) {
-    next(err);
-  }
+		next();
+	} catch (err: any) {
+		next(err);
+	}
 };
-
