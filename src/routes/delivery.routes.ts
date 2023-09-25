@@ -3,7 +3,7 @@ import deliveryController from "../controllers/delivery.controller";
 import { authenticate } from "../middleware/authenticate.middleware";
 import { authorize } from "../middleware/authorize.middleware";
 import { RoleEnumType } from "../entities/user.entity";
-import { createDeliveryPriceCalculatorSchema } from "../schemas/deliveryPriceCalculator.schema";
+import { createDeliveryPriceCalculatorSchema, updateDeliveryPriceCalculatorSchema } from "../schemas/deliveryPriceCalculator.schema";
 import { validate } from "../middleware/validateSchema.middleware";
 import { createDeliverySchema } from "../schemas/delivery.schema";
 
@@ -19,10 +19,10 @@ deliveryRouter.post(
 	deliveryController.createPriceCalculator
 );
 deliveryRouter.put(
-	"/price",
+	"/price/:id",
 	authenticate,
 	authorize(RoleEnumType.ADMIN),
-	validate(createDeliveryPriceCalculatorSchema),
+	validate(updateDeliveryPriceCalculatorSchema),
 	deliveryController.updatePriceCalculator
 );
 

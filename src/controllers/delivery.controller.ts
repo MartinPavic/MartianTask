@@ -18,7 +18,11 @@ class DeliveryController {
 	private deliveryRepository = AppDataSource.getRepository(Delivery);
 	private deliveryPriceCalculatorRepository = AppDataSource.getRepository(DeliveryPriceCalculator);
 
-	create = async (request: Request<{}, {}, CreateDeliveryInput>, response: Response, next: NextFunction): Promise<void> => {
+	create = async (
+		request: Request<{}, {}, CreateDeliveryInput>,
+		response: Response,
+		next: NextFunction
+	): Promise<void> => {
 		try {
 			let priceCalculatorJson = await redisClient.get("priceCalculator");
 			if (!priceCalculatorJson) {
@@ -48,14 +52,15 @@ class DeliveryController {
 			response.status(HttpStatus.CREATED).json({
 				status: "success",
 				data: {
-					delivery,
+					newDelivery,
+					price
 				},
 			});
 		} catch (err: any) {
 			logger.error(`[DeliveryController] Create delivery failed with ${err.toString()}`);
 			next(err);
 		}
-	}
+	};
 
 	createPriceCalculator = async (
 		request: Request<{}, {}, CreateDeliveryPriceCalculatorInput>,
@@ -66,7 +71,10 @@ class DeliveryController {
 			const currentPriceCalculator = await this.deliveryPriceCalculatorRepository.findOneBy({ active: true });
 			if (currentPriceCalculator) {
 				logger.info(`[DeliveryController] Setting current price calculator active status to false`);
-				await this.deliveryPriceCalculatorRepository.update({ active: false, updatedAt: new Date() }, currentPriceCalculator);
+				await this.deliveryPriceCalculatorRepository.update(
+					{ id: currentPriceCalculator.id },
+					{ active: false, updatedAt: new Date() }
+				);
 			}
 			const priceCalculatorInput = request.body;
 			const priceCalculator = this.deliveryPriceCalculatorRepository.create({
@@ -86,9 +94,9 @@ class DeliveryController {
 			logger.error(`[DeliveryController] Create delivery price calculator failed with ${err.toString()}`);
 			next(err);
 		}
-	}
+	};
 
-	updatePriceCalculator = async(
+	updatePriceCalculator = async (
 		request: Request<{ id: string }, {}, UpdateDeliveryPriceCalculatorInput>,
 		response: Response,
 		next: NextFunction
@@ -99,26 +107,37 @@ class DeliveryController {
 			const priceCalculator = await this.deliveryPriceCalculatorRepository.findOneByOrFail({
 				id: priceCalculatorId,
 			});
-			const updatedPriceCalculator = await this.deliveryPriceCalculatorRepository.update(
-				{ ...priceCalculatorInput, updatedAt: new Date()},
-				priceCalculator
+			await this.deliveryPriceCalculatorRepository.update(
+				{ id: priceCalculator.id },
+				{ ...priceCalculatorInput, updatedAt: new Date() }
 			);
-			if (!priceCalculatorInput.active) {
+			let reloaded = false;
+			if (priceCalculator.active && !priceCalculatorInput.active) {
 				await redisClient.del("priceCalculator");
-			} else {
-				await redisClient.set("priceCalculator", JSON.stringify(updatedPriceCalculator));
+			} else if (!priceCalculator.active && priceCalculatorInput.active) {
+				const activePriceCalculator = await this.deliveryPriceCalculatorRepository.findOneBy({ active: true });
+				if (activePriceCalculator) {
+					await this.deliveryPriceCalculatorRepository.update(
+						{ id: activePriceCalculator.id },
+						{ active: false, updatedAt: new Date() }
+					);
+				}
+				await priceCalculator.reload();
+				reloaded = true;
+				await redisClient.set("priceCalculator", JSON.stringify(priceCalculator));
 			}
+			if (!reloaded) await priceCalculator.reload();
 			response.status(HttpStatus.CREATED).json({
 				status: "success",
 				data: {
-					updatedPriceCalculator,
+					priceCalculator,
 				},
 			});
 		} catch (err: any) {
 			logger.error(`[DeliveryController] Create delivery price calculator failed with ${err.toString()}`);
 			next(err);
 		}
-	}
+	};
 }
 
 const deliveryController = new DeliveryController();
