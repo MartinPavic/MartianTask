@@ -145,7 +145,7 @@ class AuthController {
 			// 6. Send response
 			response.status(HttpStatus.OK).json({
 				status: "success",
-				accessToken,
+				data: { accessToken },
 			});
 		} catch (err: any) {
 			next(err);

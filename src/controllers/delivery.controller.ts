@@ -127,7 +127,7 @@ class DeliveryController {
 				await redisClient.set("priceCalculator", JSON.stringify(priceCalculator));
 			}
 			if (!reloaded) await priceCalculator.reload();
-			response.status(HttpStatus.CREATED).json({
+			response.status(HttpStatus.OK).json({
 				status: "success",
 				data: {
 					priceCalculator,

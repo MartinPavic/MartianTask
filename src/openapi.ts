@@ -1,6 +1,6 @@
 
 import { Application } from "express";
-import { OpenApi } from "ts-openapi";
+import { OpenApi, cookieAuth } from "ts-openapi";
 import swaggerUi from "swagger-ui-express";
 
 // create an OpenApi instance to store definitions
@@ -20,6 +20,8 @@ openApiInstance.setLicense(
   "http://www.apache.org/licenses/LICENSE-2.0", // API license url
   "http://dummy.io/terms/" // API terms of service
 );
+
+openApiInstance.declareSecurityScheme("cookieSecurity", cookieAuth("accessToken"));
 
 export function initOpenApi(app: Application) {
   // generate our OpenApi schema

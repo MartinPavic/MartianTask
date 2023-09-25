@@ -1,4 +1,4 @@
-import { TypeOf, array, boolean, number, object } from "zod";
+import { TypeOf, array, boolean, number, object, z } from "zod";
 
 export const createDeliveryPriceCalculatorSchema = object({
 	body: object({
@@ -23,17 +23,17 @@ export const createDeliveryPriceCalculatorSchema = object({
 
 export const updateDeliveryPriceCalculatorSchema = object({
 	body: object({
-		basePrice: number(),
-		pricePerKm: number(),
-		distancePriceIntervals: array(
+		basePrice: z.optional(number()),
+		pricePerKm: z.optional(number()),
+		distancePriceIntervals: z.optional(array(
 			object({
 				fromKm: number(),
 				price: number(),
 			})
 			// Sort price intervals from highest km to lowest km
-		).transform((value) => value.sort((a, b) => a.fromKm - b.fromKm)),
-		pricePerAdditionalPackage: number(),
-		active: boolean(),
+		).transform((value) => value.sort((a, b) => a.fromKm - b.fromKm))),
+		pricePerAdditionalPackage: z.optional(number()),
+		active: z.optional(boolean()),
 	}),
 });
 
