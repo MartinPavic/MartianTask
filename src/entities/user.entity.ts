@@ -7,7 +7,7 @@ export enum RoleEnumType {
 	ADMIN = "admin",
 }
 
-@Entity("users")
+@Entity("user")
 export class User extends Model {
 	@Column()
 	name: string;
@@ -26,7 +26,7 @@ export class User extends Model {
 		enum: RoleEnumType,
 		default: RoleEnumType.USER,
 	})
-	role: RoleEnumType.USER;
+	role: RoleEnumType;
 
 	toJSON() {
 		return { ...this, password: undefined, verified: undefined };

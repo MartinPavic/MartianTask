@@ -10,7 +10,7 @@ export class DeliveryPriceCalculator extends Model {
 	@Column()
 	pricePerKm: number;
 
-	@Column()
+	@Column("jsonb")
 	distancePriceIntervals: {
 		fromKm: number;
 		price: number;

@@ -1,4 +1,4 @@
-import { date, number, object, string, TypeOf, z } from "zod";
+import { number, object, string, TypeOf } from "zod";
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 export const createDeliverySchema = object({
 	body: object({
@@ -16,15 +16,17 @@ export const createDeliverySchema = object({
 		})
 			.refine((value) => isValidPhoneNumber(value), { message: "Phone number is not valid" })
 			.transform((value) => parsePhoneNumber(value)),
-		deliveryDate: date({
+		deliveryDate: string({
 			required_error: "Delivery date is required",
-		}),
+		})
+			.refine((value) => !isNaN(Date.parse(value)), { message: "Delivery date is not valid" })
+			.transform((value) => new Date(value)),
 		numberOfPackages: number({
 			required_error: "Number of packages is required",
 		}),
 		deliveryDistance: number({
-			required_error: "Delivery distance is required"
-		})
+			required_error: "Delivery distance is required",
+		}),
 	}),
 });
 

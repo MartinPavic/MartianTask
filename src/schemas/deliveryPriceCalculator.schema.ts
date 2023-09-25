@@ -23,12 +23,8 @@ export const createDeliveryPriceCalculatorSchema = object({
 
 export const updateDeliveryPriceCalculatorSchema = object({
 	body: object({
-		basePrice: number({
-			required_error: "Base price is required",
-		}),
-		pricePerKm: number({
-			required_error: "Price per KM is required",
-		}),
+		basePrice: number(),
+		pricePerKm: number(),
 		distancePriceIntervals: array(
 			object({
 				fromKm: number(),
@@ -36,9 +32,7 @@ export const updateDeliveryPriceCalculatorSchema = object({
 			})
 			// Sort price intervals from highest km to lowest km
 		).transform((value) => value.sort((a, b) => a.fromKm - b.fromKm)),
-		pricePerAdditionalPackage: number({
-			required_error: "Price per additional package is required",
-		}),
+		pricePerAdditionalPackage: number(),
 		active: boolean(),
 	}),
 });
