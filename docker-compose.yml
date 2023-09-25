@@ -17,6 +17,22 @@ services:
       - '6379:6379'
     volumes:
       - redisDB:/data
+
+  # api:
+  #   container_name: delivery_price
+  #   build: ./
+  #   restart: always
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   env_file:
+  #     - ./.env
+  #   environment:
+  #     NODE_ENV: development
+  #     POSTGRES_HOST: postgres
+  #     REDIS_HOST: redis
+  #   ports:
+  #     - "8000:8000"
 volumes:
   postgresDB:
   redisDB:
