@@ -18,7 +18,7 @@ class DeliveryController {
 	private deliveryRepository = AppDataSource.getRepository(Delivery);
 	private deliveryPriceCalculatorRepository = AppDataSource.getRepository(DeliveryPriceCalculator);
 
-	async create(request: Request<{}, {}, CreateDeliveryInput>, response: Response, next: NextFunction): Promise<void> {
+	create = async (request: Request<{}, {}, CreateDeliveryInput>, response: Response, next: NextFunction): Promise<void> => {
 		try {
 			let priceCalculatorJson = await redisClient.get("priceCalculator");
 			if (!priceCalculatorJson) {
@@ -57,23 +57,23 @@ class DeliveryController {
 		}
 	}
 
-	async createPriceCalculator(
+	createPriceCalculator = async (
 		request: Request<{}, {}, CreateDeliveryPriceCalculatorInput>,
 		response: Response,
 		next: NextFunction
-	): Promise<void> {
+	): Promise<void> => {
 		try {
 			const currentPriceCalculator = await this.deliveryPriceCalculatorRepository.findOneBy({ active: true });
 			if (currentPriceCalculator) {
 				logger.info(`[DeliveryController] Setting current price calculator active status to false`);
-				await this.deliveryPriceCalculatorRepository.update({ active: false }, currentPriceCalculator);
+				await this.deliveryPriceCalculatorRepository.update({ active: false, updatedAt: new Date() }, currentPriceCalculator);
 			}
 			const priceCalculatorInput = request.body;
 			const priceCalculator = this.deliveryPriceCalculatorRepository.create({
 				...priceCalculatorInput,
 				active: true,
 			});
-			const newPriceCalculator = this.deliveryPriceCalculatorRepository.save(priceCalculator);
+			const newPriceCalculator = await this.deliveryPriceCalculatorRepository.save(priceCalculator);
 			await redisClient.set("priceCalculator", JSON.stringify(newPriceCalculator));
 			logger.info(`[DeliveryController] Created new price calculator`);
 			response.status(HttpStatus.CREATED).json({
@@ -88,11 +88,11 @@ class DeliveryController {
 		}
 	}
 
-	async updatePriceCalculator(
+	updatePriceCalculator = async(
 		request: Request<{ id: string }, {}, UpdateDeliveryPriceCalculatorInput>,
 		response: Response,
 		next: NextFunction
-	): Promise<void> {
+	): Promise<void> => {
 		try {
 			const priceCalculatorInput = request.body;
 			const priceCalculatorId = request.params.id;
@@ -100,7 +100,7 @@ class DeliveryController {
 				id: priceCalculatorId,
 			});
 			const updatedPriceCalculator = await this.deliveryPriceCalculatorRepository.update(
-				priceCalculatorInput,
+				{ ...priceCalculatorInput, updatedAt: new Date()},
 				priceCalculator
 			);
 			if (!priceCalculatorInput.active) {

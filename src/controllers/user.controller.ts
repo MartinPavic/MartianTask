@@ -6,11 +6,11 @@ class UserController {
 
 	private userRepository = AppDataSource.getRepository(User);
 
-	async all(request: Request, response: Response, next: NextFunction) {
+	all = async (request: Request, response: Response, next: NextFunction) => {
 		return this.userRepository.find();
 	}
 
-	async one(request: Request, response: Response, next: NextFunction) {
+	one = async (request: Request, response: Response, next: NextFunction) => {
 		const id = request.params.id;
 
 		const user = await this.userRepository.findOneBy({ id });
@@ -21,7 +21,7 @@ class UserController {
 		return user;
 	}
 	
-	async getCurrentUser(request: Request, response: Response, next: NextFunction) {
+	getCurrentUser = async (request: Request, response: Response, next: NextFunction) => {
 		try {
 			const user = response.locals.user;
 	

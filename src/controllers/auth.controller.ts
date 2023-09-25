@@ -2,7 +2,7 @@ import config from "config";
 import { CookieOptions, Request, Response, NextFunction } from "express";
 import { CreateUserInput, LoginUserInput } from "../schemas/user.schema";
 import { AppDataSource } from "../data-source";
-import { User } from "../entities/user.entity";
+import { RoleEnumType, User } from "../entities/user.entity";
 import HttpStatus from "http-status-codes";
 import JWTService from "../services/jwt.service";
 import AppError from "../utils/appError";
@@ -29,7 +29,11 @@ const refreshTokenCookieOptions: CookieOptions = {
 class AuthController {
 	private userRepository = AppDataSource.getRepository(User);
 
-	async register(request: Request<{}, {}, CreateUserInput>, response: Response, next: NextFunction): Promise<void> {
+	register = async (
+		request: Request<{}, {}, CreateUserInput>,
+		response: Response,
+		next: NextFunction
+	): Promise<void> => {
 		try {
 			const { name, password, email } = request.body;
 			// 1. Create user
@@ -37,12 +41,15 @@ class AuthController {
 				name,
 				email: email.toLowerCase(),
 				password,
+				role: RoleEnumType.ADMIN,
 			});
+
+			const newUser = await this.userRepository.save(user);
 			// 2. Send response
 			response.status(HttpStatus.CREATED).json({
 				status: "success",
 				data: {
-					user,
+					newUser,
 				},
 			});
 		} catch (err: any) {
@@ -56,9 +63,9 @@ class AuthController {
 			}
 			next(err);
 		}
-	}
+	};
 
-	async login(request: Request<{}, {}, LoginUserInput>, response: Response, next: NextFunction): Promise<void> {
+	login = async (request: Request<{}, {}, LoginUserInput>, response: Response, next: NextFunction): Promise<void> => {
 		try {
 			const { email, password } = request.body;
 			const user = await this.userRepository.findOneBy({ email });
@@ -82,14 +89,14 @@ class AuthController {
 			// 4. Send response
 			response.status(HttpStatus.OK).json({
 				status: "success",
-				accessToken,
+				data: { accessToken },
 			});
 		} catch (err: any) {
 			next(err);
 		}
-	}
+	};
 
-	async refreshToken(request: Request, response: Response, next: NextFunction): Promise<void> {
+	refreshToken = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
 		try {
 			const refreshToken = request.cookies.refreshToken;
 
@@ -121,9 +128,12 @@ class AuthController {
 			}
 
 			// 4. Sign new access token
-			const accessToken = JWTService.signJwt({ sub: user.id }, "accessTokenPrivateKey", {
-				expiresIn: `${config.get<number>("accessTokenExpiresIn")}m`,
-			});
+			const accessToken = JWTService.signJwt(
+				{ sub: user.id },
+				{
+					expiresIn: `${config.get<number>("accessTokenExpiresIn")}m`,
+				}
+			);
 
 			// 5. Add Cookies
 			response.cookie("accessToken", accessToken, accessTokenCookieOptions);
@@ -140,9 +150,9 @@ class AuthController {
 		} catch (err: any) {
 			next(err);
 		}
-	}
+	};
 
-	async logout(request: Request, response: Response, next: NextFunction): Promise<void> {
+	logout = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
 		try {
 			const user = response.locals.user;
 
@@ -161,7 +171,7 @@ class AuthController {
 		} catch (err: any) {
 			next(err);
 		}
-	}
+	};
 }
 
 const authController = new AuthController();
