@@ -1,15 +1,21 @@
 {
 	"compilerOptions": {
-	  "target": "es2016",
-	  "experimentalDecorators": true,
-	  "emitDecoratorMetadata": true,
-	  "module": "commonjs",
-	  "esModuleInterop": true,
-	  "forceConsistentCasingInFileNames": true,
-	  "strict": true,
-	  "strictPropertyInitialization": false,
-	  "skipLibCheck": true,
-	  "outDir": "./build",
-	  "rootDir": "."
-	}
-  }
+		"target": "es2016",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"module": "commonjs",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"strictFunctionTypes": true,
+		"skipLibCheck": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"types": ["node"],
+		"allowSyntheticDefaultImports": true,
+		"noUncheckedIndexedAccess": true,
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
+}
