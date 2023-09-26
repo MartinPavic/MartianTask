@@ -8,8 +8,18 @@ export default {
 		password: "POSTGRES_PASSWORD",
 		database: "POSTGRES_DB",
 	},
-	accessTokenPrivateKey: "JWT_ACCESS_TOKEN_PRIVATE_KEY",
-	accessTokenPublicKey: "JWT_ACCESS_TOKEN_PUBLIC_KEY",
-	refreshTokenPrivateKey: "JWT_REFRESH_TOKEN_PRIVATE_KEY",
-	refreshTokenPublicKey: "JWT_REFRESH_TOKEN_PUBLIC_KEY",
+
+	redisConfig: {
+		host: "REDIS_HOST",
+		port: "REDIS_PORT",
+	},
+
+	jwtSecretKey: "JWT_SECRET_KEY",
+
+	smtp: {
+		host: "EMAIL_HOST",
+		pass: "EMAIL_PASS",
+		port: "EMAIL_PORT",
+		user: "EMAIL_USER",
+	},
 };

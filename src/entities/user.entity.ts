@@ -1,12 +1,13 @@
 import { Entity, Column, Index, BeforeInsert } from "typeorm";
 import Model from "./model.entity";
 import bcrypt from "bcryptjs";
+
 export enum RoleEnumType {
 	USER = "user",
 	ADMIN = "admin",
 }
 
-@Entity("users")
+@Entity("user")
 export class User extends Model {
 	@Column()
 	name: string;
@@ -25,12 +26,7 @@ export class User extends Model {
 		enum: RoleEnumType,
 		default: RoleEnumType.USER,
 	})
-	role: RoleEnumType.USER;
-
-	@Column({
-		default: false,
-	})
-	verified: boolean;
+	role: RoleEnumType;
 
 	toJSON() {
 		return { ...this, password: undefined, verified: undefined };
@@ -41,11 +37,10 @@ export class User extends Model {
 		this.password = await bcrypt.hash(this.password, 12);
 	}
 
-	// ? Validate password
 	static async comparePasswords(
-		candidatePassword: string,
+		password: string,
 		hashedPassword: string
 	) {
-		return await bcrypt.compare(candidatePassword, hashedPassword);
+		return await bcrypt.compare(password, hashedPassword);
 	}
 }
