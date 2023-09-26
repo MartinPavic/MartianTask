@@ -1,7 +1,6 @@
 # MartianTask
 Delivery Price Calculator - PoC
 
-
 ## Usage
 #### Install
 `npm install`
@@ -14,6 +13,10 @@ Delivery Price Calculator - PoC
 #### Docker compose
 - Run `docker-compose -f docker-compose.yml up -d` to run postgres and redis as docker containers
 - Uncomment **api** service in docker-compose.yml to run the API as a docker container
+
+## Docs
+
+`http://localhost:8000/api/docs`
 
 ## Dependencies
 
