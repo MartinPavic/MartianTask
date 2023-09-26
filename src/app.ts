@@ -1,5 +1,5 @@
 require("dotenv").config();
-import express, { Application } from "express";
+import express from "express";
 import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "./data-source";
 import config from "config";

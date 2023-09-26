@@ -11,11 +11,11 @@
 		"strictFunctionTypes": true,
 		"skipLibCheck": true,
 		"outDir": "dist",
-		"rootDir": "src",
+		"rootDir": ".",
 		"types": ["node"],
 		"allowSyntheticDefaultImports": true,
 		"noUncheckedIndexedAccess": true,
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "tests/**/*"],
 	"exclude": ["node_modules"]
 }
