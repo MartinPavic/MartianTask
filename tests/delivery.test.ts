@@ -1,19 +1,52 @@
-import { dataSource, teardownTestDB } from "../src/testHelper";
 import { Delivery } from "../src/entities/delivery.entity";
 import { DeliveryPriceCalculator } from "../src/entities/deliveryPriceCalculator.entity";
 import { beforeAll, afterAll, describe, test, expect } from "@jest/globals";
-beforeAll(async () => {
-	await dataSource.initialize();
-	await dataSource.synchronize();
-});
-afterAll(() => {
-	teardownTestDB();
-});
+import { IMemoryDb, newDb, DataType } from "pg-mem";
+import { DataSource, Unique } from "typeorm";
+import { v4 } from "uuid";
+import { User } from "../src/entities/user.entity";
+
 describe("Delivery Tests", () => {
-	const deliveryRepository = dataSource.getRepository(Delivery);
-	const deliveryPriceCalculatorRepository = dataSource.getRepository(DeliveryPriceCalculator);
+	let testDb: IMemoryDb;
+	let dataSource: DataSource;
+	beforeAll(async () => {
+		testDb = newDb({ autoCreateForeignKeyIndices: true });
+		testDb.public.registerFunction({
+			name: "current_database",
+			args: [],
+			returns: DataType.text,
+			implementation: (x) => `hello world: ${x}`,
+		});
+
+		testDb.public.registerFunction({
+			name: "version",
+			args: [],
+			returns: DataType.text,
+			implementation: (x) => `hello world: ${x}`,
+		});
+
+		testDb.registerExtension("uuid-ossp", (schema) => {
+			schema.registerFunction({
+				name: "uuid_generate_v4",
+				returns: DataType.uuid,
+				implementation: v4,
+				impure: true,
+			});
+		});
+
+		dataSource = await testDb.adapters.createTypeormDataSource({
+			name: "test",
+			type: "postgres",
+			entities: [Delivery, DeliveryPriceCalculator, User],
+			synchronize: true,
+		});
+		await dataSource.initialize();
+		await dataSource.synchronize();
+	});
 
 	test("should create a delivery", async () => {
+		const deliveryRepository = dataSource.getRepository(Delivery);
+
 		const delivery = deliveryRepository.create({
 			firstName: "martin",
 			lastName: "pavic",
@@ -35,6 +68,8 @@ describe("Delivery Tests", () => {
 	});
 
 	test("should return delivery", async () => {
+		const deliveryRepository = dataSource.getRepository(Delivery);
+
 		const delivery = await deliveryRepository.findOneBy({ firstName: "martin", lastName: "pavic" });
 		expect(delivery).toBeInstanceOf(Delivery);
 		expect(delivery!.firstName).toBe("martin");
@@ -47,6 +82,8 @@ describe("Delivery Tests", () => {
 	});
 
 	test("should update delivery", async () => {
+		const deliveryRepository = dataSource.getRepository(Delivery);
+
 		const deliveryUpdateInput = {
 			firstName: "ivan",
 			lastName: "ivic",
@@ -60,6 +97,8 @@ describe("Delivery Tests", () => {
 	});
 
 	test("should create delivery price calculator", async () => {
+		const deliveryPriceCalculatorRepository = dataSource.getRepository(DeliveryPriceCalculator);
+
 		const deliveryPriceCalculator = deliveryPriceCalculatorRepository.create({
 			basePrice: 5,
 			pricePerKm: 1,
@@ -75,6 +114,8 @@ describe("Delivery Tests", () => {
 	});
 
 	test("should return delivery price calculator", async () => {
+		const deliveryPriceCalculatorRepository = dataSource.getRepository(DeliveryPriceCalculator);
+
 		const deliveryPriceCalculator = await deliveryPriceCalculatorRepository.findOneBy({ active: true });
 		expect(deliveryPriceCalculator).toBeInstanceOf(DeliveryPriceCalculator);
 		expect(deliveryPriceCalculator!.basePrice).toBe(5);
@@ -84,6 +125,9 @@ describe("Delivery Tests", () => {
 	});
 
 	test("should update delivery price calculator", async () => {
+		const deliveryPriceCalculatorRepository = dataSource.getRepository(DeliveryPriceCalculator);
+		const deliveryRepository = dataSource.getRepository(Delivery);
+
 		const deliveryPriceCalculatorUpdateInput = {
 			basePrice: 4,
 			pricePerKm: 0.5,
